@@ -1,0 +1,45 @@
+# End time: 15:11:21 on May 03,2026, Elapsed time: 0:22:37
+# Errors: 1, Warnings: 1
+# vsim -voptargs="+acc" work.tb_top 
+# Start time: 15:11:21 on May 03,2026
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# ** Note: (vopt-143) Recognized 1 FSM in module "two_way_cache(fast)".
+# Loading sv_std.std
+# Loading work.cache_pkg(fast)
+# Loading work.tb_top(fast)
+# Loading work.cache_if(fast)
+# Loading work.two_way_cache(fast)
+# Loading work.backing_memory(fast)
+# ==================================================
+# Phase 3 Test: 2-Way Set-Associative Cache
+# ==================================================
+# [INFO] Cache read complete  addr=0x00000040 data=0xa0a00000
+# [PASS] Line A read miss fill actual=0xa0a00000 expected=0xa0a00000
+# [INFO] Cache read complete  addr=0x00000044 data=0xa0a00004
+# [PASS] Line A same-line read hit actual=0xa0a00004 expected=0xa0a00004
+# [INFO] Cache read complete  addr=0x00000140 data=0xb0b00000
+# [PASS] Line B same-index miss fills second way actual=0xb0b00000 expected=0xb0b00000
+# [INFO] Cache read complete  addr=0x00000048 data=0xa0a00008
+# [PASS] Line A still present after Line B fill actual=0xa0a00008 expected=0xa0a00008
+# [INFO] Cache read complete  addr=0x00000144 data=0xb0b00004
+# [PASS] Line B read hit in other way actual=0xb0b00004 expected=0xb0b00004
+# [INFO] Cache read complete  addr=0x00000240 data=0xc0c00000
+# [PASS] Line C conflict miss replaces pseudo-LRU way actual=0xc0c00000 expected=0xc0c00000
+# [INFO] Cache read complete  addr=0x00000244 data=0xc0c00004
+# [PASS] Line C read hit after replacement actual=0xc0c00004 expected=0xc0c00004
+# [INFO] Cache write complete addr=0x00000080 data=0xdeadbeef
+# [INFO] Cache read complete  addr=0x00000080 data=0xdeadbeef
+# [PASS] Write miss then read hit actual=0xdeadbeef expected=0xdeadbeef
+# [INFO] Cache write complete addr=0x00000080 data=0x000000aa
+# [INFO] Cache read complete  addr=0x00000080 data=0xdeadbeaa
+# [PASS] Write hit byte strobe update actual=0xdeadbeaa expected=0xdeadbeaa
+# ==================================================
+# Phase 3 Summary
+# PASS count = 9
+# FAIL count = 0
+# ==================================================
+# [PHASE 3 PASS] 2-way set-associative cache with pseudo-LRU verified.
+# ** Note: $finish    : ../../tb/top/tb_top.sv(293)
+#    Time: 1535 ns  Iteration: 0  Instance: /tb_top
+# 1
+# Break in Module tb_top at ../../tb/top/tb_top.sv line 293
