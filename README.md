@@ -76,7 +76,8 @@ MBIST Controller
         +--> Fail Data Register
         +--> BIST Status Registers
 
-        ## Phase 1 Results
+## Phase 1 Results
+        
 
 Phase 1 implemented the basic request/response memory interface and a backing memory model with programmable response latency.
 
@@ -100,7 +101,7 @@ Phase 1 implemented the basic request/response memory interface and a backing me
 
 ### Expected Phase 1 Simulation Result
 
-```text
+
 [PHASE 1 PASS] Basic memory interface and backing memory model verified.
 
 ## Phase 2 Results
@@ -143,3 +144,44 @@ Write-back and dirty eviction will be added in Phase 4.
 
 ```text
 [PHASE 2 PASS] Direct-mapped cache baseline verified.
+
+## Phase 3 Results
+
+Phase 3 upgraded the cache baseline from direct-mapped to 2-way set-associative.
+
+### Implemented Files
+
+- `rtl/cache/two_way_cache.sv`
+- Updated `tb/top/tb_top.sv`
+- Updated compile filelists
+- Updated waveform script
+
+### Cache Features Verified
+
+- 2-way tag comparison
+- Way 0 hit
+- Way 1 hit
+- Same-index different-tag coexistence
+- Pseudo-LRU replacement selection
+- Read miss refill
+- Read hit
+- Write miss with write-allocate
+- Write hit with byte strobe update
+
+### Phase 3 Cache Policy
+
+| Feature | Policy |
+|---|---|
+| Mapping | 2-way set-associative |
+| Replacement | Pseudo-LRU |
+| Line size | 16 bytes |
+| Words per line | 4 |
+| Write policy | Write-through |
+| Write miss policy | Write-allocate |
+
+Write-back and dirty eviction will be added in Phase 4.
+
+### Expected Phase 3 Simulation Result
+
+```text
+[PHASE 3 PASS] 2-way set-associative cache with pseudo-LRU verified.

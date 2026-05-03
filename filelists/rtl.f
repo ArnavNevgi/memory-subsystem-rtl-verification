@@ -1,5 +1,6 @@
 
-//PHASE 2
+//phase 3
+
 +incdir+../../rtl/pkg
 +incdir+../../rtl/interfaces
 +incdir+../../rtl/cache
@@ -9,7 +10,19 @@
 ../../rtl/interfaces/cache_if.sv
 
 ../../rtl/memory/backing_memory.sv
-../../rtl/cache/direct_mapped_cache.sv
+../../rtl/cache/two_way_cache.sv
+
+ //PHASE 2
+// +incdir+../../rtl/pkg
+// +incdir+../../rtl/interfaces
+// +incdir+../../rtl/cache
+// +incdir+../../rtl/memory
+
+// ../../rtl/pkg/cache_pkg.sv
+// ../../rtl/interfaces/cache_if.sv
+
+// ../../rtl/memory/backing_memory.sv
+// ../../rtl/cache/direct_mapped_cache.sv
 
 
 //PHASE 1

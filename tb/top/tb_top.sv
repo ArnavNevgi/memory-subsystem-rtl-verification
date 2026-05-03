@@ -18,19 +18,17 @@ module tb_top;
     rst_n = 1'b1;
   end
 
-  // CPU-side interface
   cache_if cpu_bus (
     .clk   (clk),
     .rst_n (rst_n)
   );
 
-  // Cache-to-memory interface
   cache_if mem_bus (
     .clk   (clk),
     .rst_n (rst_n)
   );
 
-  direct_mapped_cache u_cache (
+  two_way_cache u_cache (
     .clk    (clk),
     .rst_n  (rst_n),
     .cpu_if (cpu_bus),
@@ -164,87 +162,131 @@ module tb_top;
     repeat (2) @(posedge clk);
 
     $display("==================================================");
-    $display("Phase 2 Test: Direct-Mapped Cache Baseline");
+    $display("Phase 3 Test: 2-Way Set-Associative Cache");
     $display("==================================================");
 
-    // Preload backing memory for read miss tests.
-    // backing_memory is word-addressed internally.
-    u_backing_memory.mem[16] = 32'h1122_3344;  // address 0x0000_0040
-    u_backing_memory.mem[17] = 32'h5566_7788;  // address 0x0000_0044
-    u_backing_memory.mem[18] = 32'h99AA_BBCC;  // address 0x0000_0048
-    u_backing_memory.mem[19] = 32'hDDEE_FF00;  // address 0x0000_004C
-
-    u_backing_memory.mem[64] = 32'hCAFE_BABE;  // address 0x0000_0100
-    u_backing_memory.mem[65] = 32'hFACE_FEED;  // address 0x0000_0104
-    u_backing_memory.mem[66] = 32'hABCD_1234;  // address 0x0000_0108
-    u_backing_memory.mem[67] = 32'h1357_2468;  // address 0x0000_010C
-
     // ----------------------------------------------------------
-    // Test 1: Write miss with write-allocate
-    // Address 0x0000_0000 is not cached yet.
-    // Cache should refill line, then write data.
+    // Preload backing memory.
+    //
+    // For NUM_SETS=16 and LINE_BYTES=16:
+    // 0x0000_0040, 0x0000_0140, and 0x0000_0240
+    // map to the same set index but have different tags.
     // ----------------------------------------------------------
 
-    cache_write(32'h0000_0000, 32'hDEAD_BEEF, 4'hF);
-    cache_read (32'h0000_0000, read_data);
-    check_equal("Write miss then read hit", read_data, 32'hDEAD_BEEF);
+    // Line A: base address 0x0000_0040, word index 16
+    u_backing_memory.mem[16] = 32'hA0A0_0000;
+    u_backing_memory.mem[17] = 32'hA0A0_0004;
+    u_backing_memory.mem[18] = 32'hA0A0_0008;
+    u_backing_memory.mem[19] = 32'hA0A0_000C;
+
+    // Line B: base address 0x0000_0140, word index 80
+    u_backing_memory.mem[80] = 32'hB0B0_0000;
+    u_backing_memory.mem[81] = 32'hB0B0_0004;
+    u_backing_memory.mem[82] = 32'hB0B0_0008;
+    u_backing_memory.mem[83] = 32'hB0B0_000C;
+
+    // Line C: base address 0x0000_0240, word index 144
+    u_backing_memory.mem[144] = 32'hC0C0_0000;
+    u_backing_memory.mem[145] = 32'hC0C0_0004;
+    u_backing_memory.mem[146] = 32'hC0C0_0008;
+    u_backing_memory.mem[147] = 32'hC0C0_000C;
+
+    // Extra line for write miss/write hit testing.
+    u_backing_memory.mem[32] = 32'h1111_0000;  // address 0x0000_0080
+    u_backing_memory.mem[33] = 32'h1111_0004;  // address 0x0000_0084
+    u_backing_memory.mem[34] = 32'h1111_0008;  // address 0x0000_0088
+    u_backing_memory.mem[35] = 32'h1111_000C;  // address 0x0000_008C
 
     // ----------------------------------------------------------
-    // Test 2: Read miss refill from backing memory
-    // Address 0x0000_0040 is preloaded in backing memory.
+    // Test 1: Fill way 0 with Line A.
+    // First access to A should miss and refill.
     // ----------------------------------------------------------
 
     cache_read(32'h0000_0040, read_data);
-    check_equal("Read miss refill from backing memory", read_data, 32'h1122_3344);
+    check_equal("Line A read miss fill", read_data, 32'hA0A0_0000);
 
     // ----------------------------------------------------------
-    // Test 3: Read hit from same cache line
-    // Address 0x0000_0044 is in the same 16-byte cache line.
-    // Should hit after previous refill.
+    // Test 2: Hit in existing way for Line A.
+    // Address 0x44 is same line, different word.
     // ----------------------------------------------------------
 
     cache_read(32'h0000_0044, read_data);
-    check_equal("Read hit within refilled cache line", read_data, 32'h5566_7788);
+    check_equal("Line A same-line read hit", read_data, 32'hA0A0_0004);
 
     // ----------------------------------------------------------
-    // Test 4: Write hit with byte strobe
-    // Original 0x55667788, update lower byte to 0xAA.
-    // Expected 0x556677AA.
+    // Test 3: Fill other way with Line B.
+    // Same set index as A, different tag.
+    // In a direct-mapped cache this would evict A.
+    // In 2-way cache, A and B should coexist.
     // ----------------------------------------------------------
 
-    cache_write(32'h0000_0044, 32'h0000_00AA, 4'b0001);
-    cache_read (32'h0000_0044, read_data);
-    check_equal("Write hit byte strobe update", read_data, 32'h5566_77AA);
+    cache_read(32'h0000_0140, read_data);
+    check_equal("Line B same-index miss fills second way", read_data, 32'hB0B0_0000);
 
     // ----------------------------------------------------------
-    // Test 5: Same-index conflict replacement
-    // 0x0000_0000 and 0x0000_0100 map to same direct-mapped index
-    // for NUM_SETS=16 and LINE_BYTES=16.
-    // Accessing 0x0100 should replace index 0.
+    // Test 4: Confirm Line A still hits after Line B is loaded.
+    // This proves 2-way associativity.
     // ----------------------------------------------------------
 
-    cache_read(32'h0000_0100, read_data);
-    check_equal("Conflict miss loads new tag at same index", read_data, 32'hCAFE_BABE);
+    cache_read(32'h0000_0048, read_data);
+    check_equal("Line A still present after Line B fill", read_data, 32'hA0A0_0008);
 
-    // Reading 0x0000_0000 again should cause a miss and refill.
-    // Since Phase 2 uses write-through, backing memory should contain DEAD_BEEF.
-    cache_read(32'h0000_0000, read_data);
-    check_equal("Old line refilled after conflict replacement", read_data, 32'hDEAD_BEEF);
+    // ----------------------------------------------------------
+    // Test 5: Confirm Line B also hits.
+    // ----------------------------------------------------------
+
+    cache_read(32'h0000_0144, read_data);
+    check_equal("Line B read hit in other way", read_data, 32'hB0B0_0004);
+
+    // ----------------------------------------------------------
+    // Test 6: Pseudo-LRU replacement behavior.
+    //
+    // Previous access was Line B, so Line A should become LRU.
+    // Access Line C, which maps to same set. It should replace A.
+    // ----------------------------------------------------------
+
+    cache_read(32'h0000_0240, read_data);
+    check_equal("Line C conflict miss replaces pseudo-LRU way", read_data, 32'hC0C0_0000);
+
+    // ----------------------------------------------------------
+    // Test 7: Line C should now hit.
+    // ----------------------------------------------------------
+
+    cache_read(32'h0000_0244, read_data);
+    check_equal("Line C read hit after replacement", read_data, 32'hC0C0_0004);
+
+    // ----------------------------------------------------------
+    // Test 8: Write miss with write-allocate.
+    // ----------------------------------------------------------
+
+    cache_write(32'h0000_0080, 32'hDEAD_BEEF, 4'hF);
+    cache_read (32'h0000_0080, read_data);
+    check_equal("Write miss then read hit", read_data, 32'hDEAD_BEEF);
+
+    // ----------------------------------------------------------
+    // Test 9: Write hit with byte strobe.
+    // Initial value is DEAD_BEEF. Update lower byte to 0xAA.
+    // Expected DEAD_BEAA.
+    // ----------------------------------------------------------
+
+    cache_write(32'h0000_0080, 32'h0000_00AA, 4'b0001);
+    cache_read (32'h0000_0080, read_data);
+    check_equal("Write hit byte strobe update", read_data, 32'hDEAD_BEAA);
 
     // ----------------------------------------------------------
     // Final summary
     // ----------------------------------------------------------
 
     $display("==================================================");
-    $display("Phase 2 Summary");
+    $display("Phase 3 Summary");
     $display("PASS count = %0d", pass_count);
     $display("FAIL count = %0d", fail_count);
     $display("==================================================");
 
     if (fail_count == 0) begin
-      $display("[PHASE 2 PASS] Direct-mapped cache baseline verified.");
+      $display("[PHASE 3 PASS] 2-way set-associative cache with pseudo-LRU verified.");
     end else begin
-      $display("[PHASE 2 FAIL] Some checks failed.");
+      $display("[PHASE 3 FAIL] Some checks failed.");
     end
 
     #20;

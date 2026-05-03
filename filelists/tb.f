@@ -23,6 +23,13 @@
 // ../../tb/top/tb_top.sv
 
 //PHASE 2
+// +incdir+../../tb
+// +incdir+../../tb/top
+
+// ../../tb/top/tb_top.sv
+
+//Phase 3
+
 +incdir+../../tb
 +incdir+../../tb/top
 

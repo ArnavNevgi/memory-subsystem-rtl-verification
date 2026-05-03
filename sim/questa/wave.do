@@ -9,10 +9,16 @@ add wave -r sim:/tb_top/mem_bus/*
 add wave -r sim:/tb_top/u_cache/state_q
 add wave -r sim:/tb_top/u_cache/addr_q
 add wave -r sim:/tb_top/u_cache/write_q
+
 add wave -r sim:/tb_top/u_cache/req_index
 add wave -r sim:/tb_top/u_cache/req_tag
 add wave -r sim:/tb_top/u_cache/req_word_offset
+
+add wave -r sim:/tb_top/u_cache/way0_hit
+add wave -r sim:/tb_top/u_cache/way1_hit
 add wave -r sim:/tb_top/u_cache/cache_hit
+add wave -r sim:/tb_top/u_cache/hit_way
+add wave -r sim:/tb_top/u_cache/replace_way_q
 add wave -r sim:/tb_top/u_cache/refill_cnt_q
 add wave -r sim:/tb_top/u_cache/rsp_data_q
 
