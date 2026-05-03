@@ -223,3 +223,23 @@ Result:
 ```text
 [PHASE 6 PASS] MBIST March C- controller verified.
 
+## Phase 7: Assertions, Coverage, Scoreboard, and Random Tests
+
+Waveform file:
+
+- `phase7_assertions_coverage_random.png`
+
+Signals captured:
+
+- CPU request/response ready-valid protocol
+- Cache hit/miss status
+- Way 0 and way 1 hit signals
+- ECC corrected and uncorrectable flags
+- Response data and response error
+- Random operation count
+- Pass/fail counters
+
+Result:
+
+```text
+[PHASE 7 PASS] Assertions, scoreboard, coverage, and random tests verified.

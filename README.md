@@ -318,3 +318,56 @@ Phase 6 added an MBIST controller and verified a March C- memory test algorithm 
 4. ↓ read 0, write 1
 5. ↓ read 1, write 0
 6. ↑ read 0
+
+## Phase 7 Results
+
+Phase 7 added verification infrastructure for the cache subsystem using assertions, a reference model, scoreboard checks, functional coverage, directed tests, ECC fault tests, and randomized traffic.
+
+### Implemented Files
+
+- `tb/assertions/cache_assertions.sv`
+- `tb/coverage/cache_coverage.sv`
+- Updated `tb/top/tb_top.sv`
+- Updated `filelists/rtl.f`
+- Updated `filelists/tb.f`
+- Updated `sim/questa/wave.do`
+
+### Verification Features Added
+
+- CPU-side ready/valid protocol assertions
+- Memory-side ready/valid protocol assertions
+- Word-aligned request assertion
+- Write-strobe assertion for write requests
+- Valid response no-X assertion
+- Reference memory model
+- Scoreboard-based read checking
+- Directed cache behavior tests
+- ECC single-bit and double-bit fault tests
+- Randomized read/write traffic
+- Functional coverage collection
+
+### Phase 7 Verification Scope
+
+| Verification Feature | Status |
+|---|---|
+| Directed tests | PASS |
+| Randomized tests | PASS |
+| Scoreboard checks | PASS |
+| Protocol assertions | PASS |
+| Functional coverage | PASS |
+| ECC fault tests | PASS |
+
+### Phase 7 Simulation Result
+
+```text
+Phase 7 Summary
+FAIL count      = 0
+Random ops      = 500
+Coverage        = 82.42%
+[PHASE 7 PASS] Assertions, scoreboard, coverage, and random tests verified.
+
+Coverage Note
+
+The Phase 7 functional coverage model tracks access type, address region, write strobe type, cache hit/miss behavior, way hit behavior, response error behavior, ECC correction, ECC uncorrectable events, and selected cross coverage.
+
+Coverage closure is intentionally left as a future improvement. Some cross bins may be structurally rare or illegal for a correct 2-way cache, such as simultaneous way 0 and way 1 hits for the same request.

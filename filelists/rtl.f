@@ -1,15 +1,32 @@
-//phase 6
+//phase 7
 
 +incdir+../../rtl/pkg
-+incdir+../../rtl/mbist
++incdir+../../rtl/interfaces
++incdir+../../rtl/cache
++incdir+../../rtl/memory
++incdir+../../rtl/ecc
 
 ../../rtl/pkg/cache_pkg.sv
+../../rtl/interfaces/cache_if.sv
 
-../../rtl/mbist/mbist_pattern_gen.sv
-../../rtl/mbist/mbist_status_regs.sv
-../../rtl/mbist/mbist_addr_gen.sv
-../../rtl/mbist/mbist_controller.sv
-../../rtl/mbist/mbist_memory_array.sv
+../../rtl/ecc/ecc_encoder.sv
+../../rtl/ecc/ecc_decoder.sv
+
+../../rtl/memory/backing_memory.sv
+../../rtl/cache/two_way_wb_ecc_cache.sv
+
+//phase 6
+
+// +incdir+../../rtl/pkg
+// +incdir+../../rtl/mbist
+
+// ../../rtl/pkg/cache_pkg.sv
+
+// ../../rtl/mbist/mbist_pattern_gen.sv
+// ../../rtl/mbist/mbist_status_regs.sv
+// ../../rtl/mbist/mbist_addr_gen.sv
+// ../../rtl/mbist/mbist_controller.sv
+// ../../rtl/mbist/mbist_memory_array.sv
 
  //phase 5
 // +incdir+../../rtl/pkg

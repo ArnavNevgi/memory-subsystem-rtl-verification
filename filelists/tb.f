@@ -49,7 +49,17 @@
 
 //phase 6
 
+// +incdir+../../tb
+// +incdir+../../tb/top
+
+// ../../tb/top/tb_top.sv
+
+//phase 7
+
 +incdir+../../tb
 +incdir+../../tb/top
++incdir+../../tb/assertions
++incdir+../../tb/coverage
 
+../../tb/assertions/cache_assertions.sv
 ../../tb/top/tb_top.sv
