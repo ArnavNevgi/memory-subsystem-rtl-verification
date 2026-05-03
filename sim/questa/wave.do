@@ -3,33 +3,36 @@ vsim -voptargs=+acc work.tb_top
 add wave -r sim:/tb_top/clk
 add wave -r sim:/tb_top/rst_n
 
-add wave -r sim:/tb_top/cpu_bus/*
-add wave -r sim:/tb_top/mem_bus/*
+add wave -r sim:/tb_top/bist_start
+add wave -r sim:/tb_top/bist_busy
+add wave -r sim:/tb_top/bist_done
+add wave -r sim:/tb_top/bist_pass
+add wave -r sim:/tb_top/bist_fail
 
-add wave -r sim:/tb_top/u_cache/state_q
-add wave -r sim:/tb_top/u_cache/addr_q
-add wave -r sim:/tb_top/u_cache/write_q
+add wave -r sim:/tb_top/fail_addr
+add wave -r sim:/tb_top/fail_expected
+add wave -r sim:/tb_top/fail_observed
 
-add wave -r sim:/tb_top/u_cache/req_index
-add wave -r sim:/tb_top/u_cache/req_tag
-add wave -r sim:/tb_top/u_cache/req_word_offset
+add wave -r sim:/tb_top/mbist_mem_we
+add wave -r sim:/tb_top/mbist_mem_addr
+add wave -r sim:/tb_top/mbist_mem_wdata
+add wave -r sim:/tb_top/mbist_mem_rdata
 
-add wave -r sim:/tb_top/u_cache/way0_hit
-add wave -r sim:/tb_top/u_cache/way1_hit
-add wave -r sim:/tb_top/u_cache/cache_hit
-add wave -r sim:/tb_top/u_cache/hit_way
-add wave -r sim:/tb_top/u_cache/replace_way_q
+add wave -r sim:/tb_top/normal_access_blocked
+add wave -r sim:/tb_top/normal_ready
 
-add wave -r sim:/tb_top/u_cache/hit_decoded_data
-add wave -r sim:/tb_top/u_cache/hit_corrected
-add wave -r sim:/tb_top/u_cache/hit_uncorrectable
-add wave -r sim:/tb_top/u_cache/ecc_corrected_q
-add wave -r sim:/tb_top/u_cache/ecc_uncorrectable_q
-add wave -r sim:/tb_top/u_cache/rsp_data_q
-add wave -r sim:/tb_top/u_cache/rsp_error_q
+add wave -r sim:/tb_top/fault_enable
+add wave -r sim:/tb_top/fault_addr
+add wave -r sim:/tb_top/fault_mask
 
-add wave -r sim:/tb_top/u_backing_memory/state_q
-add wave -r sim:/tb_top/u_backing_memory/addr_q
-add wave -r sim:/tb_top/u_backing_memory/read_data_q
+add wave -r sim:/tb_top/u_mbist_controller/state_q
+add wave -r sim:/tb_top/u_mbist_controller/phase_q
+add wave -r sim:/tb_top/u_mbist_controller/addr_q
+add wave -r sim:/tb_top/u_mbist_controller/read_en
+add wave -r sim:/tb_top/u_mbist_controller/write_en
+add wave -r sim:/tb_top/u_mbist_controller/expected_data
+add wave -r sim:/tb_top/u_mbist_controller/write_data
+add wave -r sim:/tb_top/u_mbist_controller/count_down
+add wave -r sim:/tb_top/u_mbist_controller/fail_set
 
 run -all

@@ -277,3 +277,44 @@ This documents an important real memory-system concept:
 Phase 5 Summary
 FAIL count = 0
 [PHASE 5 PASS] SECDED ECC and fault injection verified.
+
+## Phase 6 Results
+
+Phase 6 added an MBIST controller and verified a March C- memory test algorithm using a standalone memory array model.
+
+### Implemented Files
+
+- `rtl/mbist/mbist_controller.sv`
+- `rtl/mbist/mbist_addr_gen.sv`
+- `rtl/mbist/mbist_pattern_gen.sv`
+- `rtl/mbist/mbist_status_regs.sv`
+- `rtl/mbist/mbist_memory_array.sv`
+- Updated `tb/top/tb_top.sv`
+- Updated compile filelists
+- Updated waveform script
+
+### MBIST Features Verified
+
+- March C- memory test sequencing
+- Up-counting address traversal
+- Down-counting address traversal
+- Write-0 operation
+- Read-0/write-1 operation
+- Read-1/write-0 operation
+- Final read-0 operation
+- BIST start, busy, done, pass, and fail status
+- Normal memory access blocked during BIST
+- Fault injection during memory read
+- Fail address capture
+- Expected data capture
+- Observed data capture
+
+### March C- Sequence
+
+```text
+1. ↑ write 0
+2. ↑ read 0, write 1
+3. ↑ read 1, write 0
+4. ↓ read 0, write 1
+5. ↓ read 1, write 0
+6. ↑ read 0

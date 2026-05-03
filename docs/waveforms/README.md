@@ -197,3 +197,29 @@ Result:
 
 ```text
 [PHASE 5 PASS] SECDED ECC and fault injection verified.
+
+## Phase 6: MBIST March C-
+
+Waveform file:
+
+- `phase6_mbist_march_c.png`
+
+Signals captured:
+
+- BIST start
+- BIST busy
+- BIST done/pass/fail status
+- March C- phase counter
+- MBIST address counter
+- Read/write control
+- Expected data
+- Observed memory data
+- Fault injection enable
+- Fail address and data capture
+- Normal access blocked during BIST
+
+Result:
+
+```text
+[PHASE 6 PASS] MBIST March C- controller verified.
+

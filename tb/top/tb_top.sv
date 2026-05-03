@@ -2,7 +2,9 @@
 
 module tb_top;
 
-  import cache_pkg::*;
+  localparam int ADDR_WIDTH = 8;
+  localparam int DATA_WIDTH = 32;
+  localparam int NUM_WORDS  = 64;
 
   logic clk;
   logic rst_n;
@@ -18,140 +20,93 @@ module tb_top;
     rst_n = 1'b1;
   end
 
-  cache_if cpu_bus (
-    .clk   (clk),
-    .rst_n (rst_n)
-  );
+  logic bist_start;
+  logic bist_busy;
+  logic bist_done;
+  logic bist_pass;
+  logic bist_fail;
 
-  cache_if mem_bus (
-    .clk   (clk),
-    .rst_n (rst_n)
-  );
+  logic [ADDR_WIDTH-1:0] fail_addr;
+  logic [DATA_WIDTH-1:0] fail_expected;
+  logic [DATA_WIDTH-1:0] fail_observed;
 
-  two_way_wb_ecc_cache u_cache (
-    .clk    (clk),
-    .rst_n  (rst_n),
-    .cpu_if (cpu_bus),
-    .mem_if (mem_bus)
-  );
+  logic                  mbist_mem_we;
+  logic [ADDR_WIDTH-1:0] mbist_mem_addr;
+  logic [DATA_WIDTH-1:0] mbist_mem_wdata;
+  logic [DATA_WIDTH-1:0] mbist_mem_rdata;
 
-  backing_memory #(
-    .RESP_LATENCY(2)
-  ) u_backing_memory (
-    .clk    (clk),
-    .rst_n  (rst_n),
-    .mem_if (mem_bus)
-  );
+  logic normal_access_blocked;
+
+  logic                  normal_en;
+  logic                  normal_we;
+  logic [ADDR_WIDTH-1:0] normal_addr;
+  logic [DATA_WIDTH-1:0] normal_wdata;
+  logic [DATA_WIDTH-1:0] normal_rdata;
+  logic                  normal_ready;
+
+  logic                  fault_enable;
+  logic [ADDR_WIDTH-1:0] fault_addr;
+  logic [DATA_WIDTH-1:0] fault_mask;
 
   int unsigned pass_count;
   int unsigned fail_count;
 
-  data_t read_data;
-  logic  read_error;
+  mbist_controller #(
+    .ADDR_WIDTH(ADDR_WIDTH),
+    .DATA_WIDTH(DATA_WIDTH),
+    .NUM_WORDS (NUM_WORDS)
+  ) u_mbist_controller (
+    .clk                     (clk),
+    .rst_n                   (rst_n),
+    .bist_start_i            (bist_start),
+    .bist_busy_o             (bist_busy),
+    .bist_done_o             (bist_done),
+    .bist_pass_o             (bist_pass),
+    .bist_fail_o             (bist_fail),
+    .fail_addr_o             (fail_addr),
+    .fail_expected_o         (fail_expected),
+    .fail_observed_o         (fail_observed),
+    .mem_we_o                (mbist_mem_we),
+    .mem_addr_o              (mbist_mem_addr),
+    .mem_wdata_o             (mbist_mem_wdata),
+    .mem_rdata_i             (mbist_mem_rdata),
+    .normal_access_blocked_o (normal_access_blocked)
+  );
+
+  mbist_memory_array #(
+    .ADDR_WIDTH(ADDR_WIDTH),
+    .DATA_WIDTH(DATA_WIDTH),
+    .NUM_WORDS (NUM_WORDS)
+  ) u_mbist_memory_array (
+    .clk             (clk),
+    .rst_n           (rst_n),
+    .bist_active_i   (bist_busy),
+    .bist_we_i       (mbist_mem_we),
+    .bist_addr_i     (mbist_mem_addr),
+    .bist_wdata_i    (mbist_mem_wdata),
+    .bist_rdata_o    (mbist_mem_rdata),
+    .normal_en_i     (normal_en),
+    .normal_we_i     (normal_we),
+    .normal_addr_i   (normal_addr),
+    .normal_wdata_i  (normal_wdata),
+    .normal_rdata_o  (normal_rdata),
+    .normal_ready_o  (normal_ready),
+    .fault_enable_i  (fault_enable),
+    .fault_addr_i    (fault_addr),
+    .fault_mask_i    (fault_mask)
+  );
 
   task automatic init_signals();
-    cpu_bus.req_valid = 1'b0;
-    cpu_bus.req_write = 1'b0;
-    cpu_bus.req_addr  = '0;
-    cpu_bus.req_wdata = '0;
-    cpu_bus.req_wstrb = '0;
-    cpu_bus.rsp_ready = 1'b1;
-  endtask
-
-  task automatic cache_write(
-    input addr_t addr,
-    input data_t data,
-    input strb_t strb
-  );
     begin
-      @(posedge clk);
+      bist_start  = 1'b0;
+      normal_en   = 1'b0;
+      normal_we   = 1'b0;
+      normal_addr = '0;
+      normal_wdata = '0;
 
-      cpu_bus.req_valid <= 1'b1;
-      cpu_bus.req_write <= 1'b1;
-      cpu_bus.req_addr  <= addr;
-      cpu_bus.req_wdata <= data;
-      cpu_bus.req_wstrb <= strb;
-
-      do begin
-        @(posedge clk);
-      end while (!cpu_bus.req_ready);
-
-      cpu_bus.req_valid <= 1'b0;
-      cpu_bus.req_write <= 1'b0;
-      cpu_bus.req_addr  <= '0;
-      cpu_bus.req_wdata <= '0;
-      cpu_bus.req_wstrb <= '0;
-
-      do begin
-        @(posedge clk);
-      end while (!cpu_bus.rsp_valid);
-
-      if (cpu_bus.rsp_error) begin
-        $display("[FAIL] Cache write error addr=0x%08h", addr);
-        fail_count++;
-      end else begin
-        $display("[INFO] Cache write complete addr=0x%08h data=0x%08h", addr, data);
-      end
-
-      @(posedge clk);
-    end
-  endtask
-
-  task automatic cache_read(
-    input  addr_t addr,
-    output data_t data,
-    output logic  error
-  );
-    begin
-      @(posedge clk);
-
-      cpu_bus.req_valid <= 1'b1;
-      cpu_bus.req_write <= 1'b0;
-      cpu_bus.req_addr  <= addr;
-      cpu_bus.req_wdata <= '0;
-      cpu_bus.req_wstrb <= '0;
-
-      do begin
-        @(posedge clk);
-      end while (!cpu_bus.req_ready);
-
-      cpu_bus.req_valid <= 1'b0;
-      cpu_bus.req_write <= 1'b0;
-      cpu_bus.req_addr  <= '0;
-      cpu_bus.req_wdata <= '0;
-      cpu_bus.req_wstrb <= '0;
-
-      do begin
-        @(posedge clk);
-      end while (!cpu_bus.rsp_valid);
-
-      data  = cpu_bus.rsp_rdata;
-      error = cpu_bus.rsp_error;
-
-      $display("[INFO] Cache read addr=0x%08h data=0x%08h error=%0b corrected=%0b uncorrectable=%0b",
-               addr,
-               data,
-               error,
-               u_cache.ecc_corrected_q,
-               u_cache.ecc_uncorrectable_q);
-
-      @(posedge clk);
-    end
-  endtask
-
-  task automatic check_equal(
-    input string name,
-    input data_t actual,
-    input data_t expected
-  );
-    begin
-      if (actual === expected) begin
-        $display("[PASS] %s actual=0x%08h expected=0x%08h", name, actual, expected);
-        pass_count++;
-      end else begin
-        $display("[FAIL] %s actual=0x%08h expected=0x%08h", name, actual, expected);
-        fail_count++;
-      end
+      fault_enable = 1'b0;
+      fault_addr   = '0;
+      fault_mask   = '0;
     end
   endtask
 
@@ -171,6 +126,62 @@ module tb_top;
     end
   endtask
 
+  task automatic check_data(
+    input string name,
+    input logic [DATA_WIDTH-1:0] actual,
+    input logic [DATA_WIDTH-1:0] expected
+  );
+    begin
+      if (actual === expected) begin
+        $display("[PASS] %s actual=0x%08h expected=0x%08h", name, actual, expected);
+        pass_count++;
+      end else begin
+        $display("[FAIL] %s actual=0x%08h expected=0x%08h", name, actual, expected);
+        fail_count++;
+      end
+    end
+  endtask
+
+  task automatic check_addr(
+    input string name,
+    input logic [ADDR_WIDTH-1:0] actual,
+    input logic [ADDR_WIDTH-1:0] expected
+  );
+    begin
+      if (actual === expected) begin
+        $display("[PASS] %s actual=0x%02h expected=0x%02h", name, actual, expected);
+        pass_count++;
+      end else begin
+        $display("[FAIL] %s actual=0x%02h expected=0x%02h", name, actual, expected);
+        fail_count++;
+      end
+    end
+  endtask
+
+task automatic start_bist_and_wait();
+  begin
+    // Ensure previous BIST completion has returned to IDLE.
+    bist_start <= 1'b0;
+
+    // Wait until status is clear / controller is idle enough to accept a new start.
+    wait (bist_busy == 1'b0);
+    repeat (3) @(posedge clk);
+
+    @(posedge clk);
+    bist_start <= 1'b1;
+
+    @(posedge clk);
+    bist_start <= 1'b0;
+
+    // Wait for BIST to actually start.
+    wait (bist_busy == 1'b1);
+
+    // Then wait for completion.
+    wait (bist_done == 1'b1);
+    @(posedge clk);
+  end
+endtask
+
   initial begin
     pass_count = 0;
     fail_count = 0;
@@ -181,113 +192,90 @@ module tb_top;
     repeat (2) @(posedge clk);
 
     $display("==================================================");
-    $display("Phase 5 Test: SECDED ECC and Fault Injection");
+    $display("Phase 6 Test: MBIST Controller with March C-");
     $display("==================================================");
 
-    // Address 0x0000_0040 maps to set index 4.
-    // First line fill should choose way 0.
-    u_backing_memory.mem[16] = 32'hA5A5_1234;
-    u_backing_memory.mem[17] = 32'h1111_2222;
-    u_backing_memory.mem[18] = 32'h3333_4444;
-    u_backing_memory.mem[19] = 32'h5555_6666;
-
-    // Address 0x0000_0140 maps to same set index 4.
-    // Second line fill should choose way 1.
-    u_backing_memory.mem[80] = 32'hBEEF_CAFE;
-    u_backing_memory.mem[81] = 32'h7777_8888;
-    u_backing_memory.mem[82] = 32'h9999_AAAA;
-    u_backing_memory.mem[83] = 32'hBBBB_CCCC;
-
-    // Address 0x0000_0240 maps to same set index 4.
-    // Used after double-error test if needed.
-    u_backing_memory.mem[144] = 32'hFACE_1234;
-    u_backing_memory.mem[145] = 32'hABCD_0001;
-    u_backing_memory.mem[146] = 32'hABCD_0002;
-    u_backing_memory.mem[147] = 32'hABCD_0003;
-
     // ----------------------------------------------------------
-    // Test 1: Normal read miss/refill with ECC encoding.
+    // Test 1: Clean MBIST pass
     // ----------------------------------------------------------
 
-    cache_read(32'h0000_0040, read_data, read_error);
-    check_equal("ECC clean read data", read_data, 32'hA5A5_1234);
-    check_bit  ("ECC clean read error", read_error, 1'b0);
-    check_bit  ("ECC clean read corrected flag", u_cache.ecc_corrected_q, 1'b0);
-    check_bit  ("ECC clean read uncorrectable flag", u_cache.ecc_uncorrectable_q, 1'b0);
+    fault_enable = 1'b0;
+    start_bist_and_wait();
+
+    check_bit("Clean MBIST done", bist_done, 1'b1);
+    check_bit("Clean MBIST pass", bist_pass, 1'b1);
+    check_bit("Clean MBIST fail", bist_fail, 1'b0);
 
     // ----------------------------------------------------------
-    // Test 2: Single-bit data/codeword error.
-    // Flip codeword bit 2. This corresponds to Hamming position 3,
-    // which is a data position. ECC should correct it.
-    // set=4, way=0, word=0 for address 0x0000_0040.
+    // Test 2: Normal access blocked during BIST
     // ----------------------------------------------------------
 
-    u_cache.inject_fault(4, 0, 0, 39'h0000_0000_004);
+    @(posedge clk);
+    bist_start <= 1'b1;
 
-    cache_read(32'h0000_0040, read_data, read_error);
-    check_equal("Single-bit data error corrected data", read_data, 32'hA5A5_1234);
-    check_bit  ("Single-bit data error response error", read_error, 1'b0);
-    check_bit  ("Single-bit data error corrected flag", u_cache.ecc_corrected_q, 1'b1);
-    check_bit  ("Single-bit data error uncorrectable flag", u_cache.ecc_uncorrectable_q, 1'b0);
+    @(posedge clk);
+    bist_start <= 1'b0;
 
-    // ----------------------------------------------------------
-    // Test 3: Single-bit ECC/parity error.
-    // Fill second line into way 1, then flip parity bit 0.
-    // Data should still be returned correctly.
-    // ----------------------------------------------------------
+    repeat (5) @(posedge clk);
 
-    cache_read(32'h0000_0140, read_data, read_error);
-    check_equal("Second line clean read", read_data, 32'hBEEF_CAFE);
+    normal_en    <= 1'b1;
+    normal_we    <= 1'b1;
+    normal_addr  <= 8'h05;
+    normal_wdata <= 32'hDEAD_BEEF;
 
-    u_cache.inject_fault(4, 1, 0, 39'h0000_0000_001);
+    @(posedge clk);
 
-    cache_read(32'h0000_0140, read_data, read_error);
-    check_equal("Single-bit ECC bit error data", read_data, 32'hBEEF_CAFE);
-    check_bit  ("Single-bit ECC bit error response error", read_error, 1'b0);
-    check_bit  ("Single-bit ECC bit corrected flag", u_cache.ecc_corrected_q, 1'b1);
-    check_bit  ("Single-bit ECC bit uncorrectable flag", u_cache.ecc_uncorrectable_q, 1'b0);
+    check_bit("Normal access blocked during BIST", normal_access_blocked, 1'b1);
+    check_bit("Normal memory port not ready during BIST", normal_ready, 1'b0);
 
-    // ----------------------------------------------------------
-    // Test 4: Double-bit error.
-    // First restore Line A by rewriting clean data so the previous
-    // single-bit injected fault is removed and ECC is regenerated.
-    // Then flip exactly two bits.
-    // ----------------------------------------------------------
+    normal_en <= 1'b0;
+    normal_we <= 1'b0;
 
-    cache_write(32'h0000_0040, 32'hA5A5_1234, 4'hF);
+    wait (bist_done == 1'b1);
+    @(posedge clk);
 
-    u_cache.inject_fault(4, 0, 0, 39'h0000_0000_014);
-
-    cache_read(32'h0000_0040, read_data, read_error);
-    check_bit("Double-bit error response error", read_error, 1'b1);
-    check_bit("Double-bit error corrected flag", u_cache.ecc_corrected_q, 1'b0);
-    check_bit("Double-bit error uncorrectable flag", u_cache.ecc_uncorrectable_q, 1'b1);
+    check_bit("Second clean MBIST done", bist_done, 1'b1);
+    check_bit("Second clean MBIST pass", bist_pass, 1'b1);
+    check_bit("Second clean MBIST fail", bist_fail, 1'b0);
 
     // ----------------------------------------------------------
-    // Test 5: Write hit after ECC-protected access.
-    // This verifies writes regenerate ECC.
+    // Test 3: Inject read fault and verify fail capture.
+    //
+    // Fault model:
+    // - Memory stores correct data.
+    // - Read at fault_addr returns corrupted data.
+    // - MBIST should detect mismatch during March read.
     // ----------------------------------------------------------
 
-    cache_write(32'h0000_0140, 32'h1234_5678, 4'hF);
-    cache_read (32'h0000_0140, read_data, read_error);
+    fault_enable = 1'b1;
+    fault_addr   = 8'h0A;
+    fault_mask   = 32'h0000_0001;
 
-    check_equal("Write hit regenerates ECC and returns updated data", read_data, 32'h1234_5678);
-    check_bit  ("Write hit ECC read error", read_error, 1'b0);
+    repeat (5) @(posedge clk);
+
+    start_bist_and_wait();
+
+    check_bit ("Fault MBIST done", bist_done, 1'b1);
+    check_bit ("Fault MBIST pass", bist_pass, 1'b0);
+    check_bit ("Fault MBIST fail", bist_fail, 1'b1);
+    check_addr("Fault address captured", fail_addr, 8'h0A);
+    check_data("Fail expected data captured", fail_expected, 32'h0000_0000);
+    check_data("Fail observed data captured", fail_observed, 32'h0000_0001);
 
     // ----------------------------------------------------------
     // Final summary
     // ----------------------------------------------------------
 
     $display("==================================================");
-    $display("Phase 5 Summary");
+    $display("Phase 6 Summary");
     $display("PASS count = %0d", pass_count);
     $display("FAIL count = %0d", fail_count);
     $display("==================================================");
 
     if (fail_count == 0) begin
-      $display("[PHASE 5 PASS] SECDED ECC and fault injection verified.");
+      $display("[PHASE 6 PASS] MBIST March C- controller verified.");
     end else begin
-      $display("[PHASE 5 FAIL] Some checks failed.");
+      $display("[PHASE 6 FAIL] Some checks failed.");
     end
 
     #20;

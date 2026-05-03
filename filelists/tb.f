@@ -41,7 +41,14 @@
 
 // ../../tb/top/tb_top.sv
 
-//phase 5
+// //phase 5
+// +incdir+../../tb
+// +incdir+../../tb/top
+
+// ../../tb/top/tb_top.sv
+
+//phase 6
+
 +incdir+../../tb
 +incdir+../../tb/top
 
