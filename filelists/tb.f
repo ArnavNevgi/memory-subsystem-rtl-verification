@@ -30,6 +30,12 @@
 
 //Phase 3
 
+// +incdir+../../tb
+// +incdir+../../tb/top
+
+// ../../tb/top/tb_top.sv
+
+//Phase 4
 +incdir+../../tb
 +incdir+../../tb/top
 

@@ -28,7 +28,7 @@ module tb_top;
     .rst_n (rst_n)
   );
 
-  two_way_cache u_cache (
+  two_way_wb_cache u_cache (
     .clk    (clk),
     .rst_n  (rst_n),
     .cpu_if (cpu_bus),
@@ -162,131 +162,146 @@ module tb_top;
     repeat (2) @(posedge clk);
 
     $display("==================================================");
-    $display("Phase 3 Test: 2-Way Set-Associative Cache");
+    $display("Phase 4 Test: Write-Back Cache and Dirty Eviction");
     $display("==================================================");
 
     // ----------------------------------------------------------
-    // Preload backing memory.
+    // Address mapping note:
     //
     // For NUM_SETS=16 and LINE_BYTES=16:
-    // 0x0000_0040, 0x0000_0140, and 0x0000_0240
-    // map to the same set index but have different tags.
+    // 0x0000_0040, 0x0000_0140, 0x0000_0240
+    // map to the same set index with different tags.
     // ----------------------------------------------------------
 
-    // Line A: base address 0x0000_0040, word index 16
-    u_backing_memory.mem[16] = 32'hA0A0_0000;
-    u_backing_memory.mem[17] = 32'hA0A0_0004;
-    u_backing_memory.mem[18] = 32'hA0A0_0008;
-    u_backing_memory.mem[19] = 32'hA0A0_000C;
+    // Line A: base 0x0000_0040, word index 16
+    u_backing_memory.mem[16] = 32'hAAAA_0000;
+    u_backing_memory.mem[17] = 32'hAAAA_0004;
+    u_backing_memory.mem[18] = 32'hAAAA_0008;
+    u_backing_memory.mem[19] = 32'hAAAA_000C;
 
-    // Line B: base address 0x0000_0140, word index 80
-    u_backing_memory.mem[80] = 32'hB0B0_0000;
-    u_backing_memory.mem[81] = 32'hB0B0_0004;
-    u_backing_memory.mem[82] = 32'hB0B0_0008;
-    u_backing_memory.mem[83] = 32'hB0B0_000C;
+    // Line B: base 0x0000_0140, word index 80
+    u_backing_memory.mem[80] = 32'hBBBB_0000;
+    u_backing_memory.mem[81] = 32'hBBBB_0004;
+    u_backing_memory.mem[82] = 32'hBBBB_0008;
+    u_backing_memory.mem[83] = 32'hBBBB_000C;
 
-    // Line C: base address 0x0000_0240, word index 144
-    u_backing_memory.mem[144] = 32'hC0C0_0000;
-    u_backing_memory.mem[145] = 32'hC0C0_0004;
-    u_backing_memory.mem[146] = 32'hC0C0_0008;
-    u_backing_memory.mem[147] = 32'hC0C0_000C;
+    // Line C: base 0x0000_0240, word index 144
+    u_backing_memory.mem[144] = 32'hCCCC_0000;
+    u_backing_memory.mem[145] = 32'hCCCC_0004;
+    u_backing_memory.mem[146] = 32'hCCCC_0008;
+    u_backing_memory.mem[147] = 32'hCCCC_000C;
 
-    // Extra line for write miss/write hit testing.
-    u_backing_memory.mem[32] = 32'h1111_0000;  // address 0x0000_0080
-    u_backing_memory.mem[33] = 32'h1111_0004;  // address 0x0000_0084
-    u_backing_memory.mem[34] = 32'h1111_0008;  // address 0x0000_0088
-    u_backing_memory.mem[35] = 32'h1111_000C;  // address 0x0000_008C
+    // Clean eviction test lines.
+    u_backing_memory.mem[32]  = 32'h1111_0000;  // 0x0000_0080
+    u_backing_memory.mem[96]  = 32'h2222_0000;  // 0x0000_0180
+    u_backing_memory.mem[160] = 32'h3333_0000;  // 0x0000_0280
 
     // ----------------------------------------------------------
-    // Test 1: Fill way 0 with Line A.
-    // First access to A should miss and refill.
+    // Test 1: Write miss should allocate line and mark it dirty.
+    // It should NOT immediately update backing memory.
     // ----------------------------------------------------------
+
+    cache_write(32'h0000_0040, 32'hDEAD_BEEF, 4'hF);
+    check_equal("Write-back: memory not updated immediately",
+                u_backing_memory.mem[16],
+                32'hAAAA_0000);
 
     cache_read(32'h0000_0040, read_data);
-    check_equal("Line A read miss fill", read_data, 32'hA0A0_0000);
+    check_equal("Write miss allocated dirty line in cache",
+                read_data,
+                32'hDEAD_BEEF);
 
     // ----------------------------------------------------------
-    // Test 2: Hit in existing way for Line A.
-    // Address 0x44 is same line, different word.
+    // Test 2: Fill second way with another dirty line.
     // ----------------------------------------------------------
 
-    cache_read(32'h0000_0044, read_data);
-    check_equal("Line A same-line read hit", read_data, 32'hA0A0_0004);
+    cache_write(32'h0000_0140, 32'hCAFE_BABE, 4'hF);
+    cache_read (32'h0000_0140, read_data);
+    check_equal("Second dirty line allocated in other way",
+                read_data,
+                32'hCAFE_BABE);
 
     // ----------------------------------------------------------
-    // Test 3: Fill other way with Line B.
-    // Same set index as A, different tag.
-    // In a direct-mapped cache this would evict A.
-    // In 2-way cache, A and B should coexist.
-    // ----------------------------------------------------------
-
-    cache_read(32'h0000_0140, read_data);
-    check_equal("Line B same-index miss fills second way", read_data, 32'hB0B0_0000);
-
-    // ----------------------------------------------------------
-    // Test 4: Confirm Line A still hits after Line B is loaded.
-    // This proves 2-way associativity.
-    // ----------------------------------------------------------
-
-    cache_read(32'h0000_0048, read_data);
-    check_equal("Line A still present after Line B fill", read_data, 32'hA0A0_0008);
-
-    // ----------------------------------------------------------
-    // Test 5: Confirm Line B also hits.
-    // ----------------------------------------------------------
-
-    cache_read(32'h0000_0144, read_data);
-    check_equal("Line B read hit in other way", read_data, 32'hB0B0_0004);
-
-    // ----------------------------------------------------------
-    // Test 6: Pseudo-LRU replacement behavior.
-    //
-    // Previous access was Line B, so Line A should become LRU.
-    // Access Line C, which maps to same set. It should replace A.
+    // Test 3: Conflict miss with Line C.
+    // PLRU should select a dirty victim.
+    // Dirty victim must be written back before refill.
+    // Based on access order, Line A is expected to be evicted.
     // ----------------------------------------------------------
 
     cache_read(32'h0000_0240, read_data);
-    check_equal("Line C conflict miss replaces pseudo-LRU way", read_data, 32'hC0C0_0000);
+    check_equal("Conflict miss loads Line C",
+                read_data,
+                32'hCCCC_0000);
+
+    check_equal("Dirty eviction wrote Line A word 0 back to memory",
+                u_backing_memory.mem[16],
+                32'hDEAD_BEEF);
 
     // ----------------------------------------------------------
-    // Test 7: Line C should now hit.
+    // Test 4: Reading Line A again should refill updated data
+    // from backing memory.
     // ----------------------------------------------------------
 
-    cache_read(32'h0000_0244, read_data);
-    check_equal("Line C read hit after replacement", read_data, 32'hC0C0_0004);
+    cache_read(32'h0000_0040, read_data);
+    check_equal("Evicted dirty Line A refills with updated data",
+                read_data,
+                32'hDEAD_BEEF);
 
     // ----------------------------------------------------------
-    // Test 8: Write miss with write-allocate.
+    // Test 5: Write hit should update cache and dirty bit.
+    // Backing memory should remain unchanged until eviction.
     // ----------------------------------------------------------
 
-    cache_write(32'h0000_0080, 32'hDEAD_BEEF, 4'hF);
-    cache_read (32'h0000_0080, read_data);
-    check_equal("Write miss then read hit", read_data, 32'hDEAD_BEEF);
+    cache_write(32'h0000_0040, 32'h0000_00AA, 4'b0001);
+    cache_read (32'h0000_0040, read_data);
+    check_equal("Write hit byte strobe updates cached data",
+                read_data,
+                32'hDEAD_BEAA);
+
+    check_equal("Write hit does not immediately update backing memory",
+                u_backing_memory.mem[16],
+                32'hDEAD_BEEF);
 
     // ----------------------------------------------------------
-    // Test 9: Write hit with byte strobe.
-    // Initial value is DEAD_BEEF. Update lower byte to 0xAA.
-    // Expected DEAD_BEAA.
+    // Test 6: Clean eviction path.
+    // Read-only lines should be clean. Replacing a clean line
+    // should not require a dirty write-back.
+    // This test mainly verifies functionality remains correct.
     // ----------------------------------------------------------
 
-    cache_write(32'h0000_0080, 32'h0000_00AA, 4'b0001);
-    cache_read (32'h0000_0080, read_data);
-    check_equal("Write hit byte strobe update", read_data, 32'hDEAD_BEAA);
+    cache_read(32'h0000_0080, read_data);
+    check_equal("Clean Line D read miss fill",
+                read_data,
+                32'h1111_0000);
+
+    cache_read(32'h0000_0180, read_data);
+    check_equal("Clean Line E fills second way",
+                read_data,
+                32'h2222_0000);
+
+    cache_read(32'h0000_0280, read_data);
+    check_equal("Clean conflict miss loads Line F",
+                read_data,
+                32'h3333_0000);
+
+    check_equal("Clean eviction did not modify original memory line",
+                u_backing_memory.mem[32],
+                32'h1111_0000);
 
     // ----------------------------------------------------------
     // Final summary
     // ----------------------------------------------------------
 
     $display("==================================================");
-    $display("Phase 3 Summary");
+    $display("Phase 4 Summary");
     $display("PASS count = %0d", pass_count);
     $display("FAIL count = %0d", fail_count);
     $display("==================================================");
 
     if (fail_count == 0) begin
-      $display("[PHASE 3 PASS] 2-way set-associative cache with pseudo-LRU verified.");
+      $display("[PHASE 4 PASS] Write-back cache and dirty eviction verified.");
     end else begin
-      $display("[PHASE 3 FAIL] Some checks failed.");
+      $display("[PHASE 4 FAIL] Some checks failed.");
     end
 
     #20;

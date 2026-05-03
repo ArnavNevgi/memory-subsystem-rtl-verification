@@ -18,13 +18,19 @@ add wave -r sim:/tb_top/u_cache/way0_hit
 add wave -r sim:/tb_top/u_cache/way1_hit
 add wave -r sim:/tb_top/u_cache/cache_hit
 add wave -r sim:/tb_top/u_cache/hit_way
+add wave -r sim:/tb_top/u_cache/selected_way_comb
 add wave -r sim:/tb_top/u_cache/replace_way_q
+add wave -r sim:/tb_top/u_cache/selected_line_dirty
+
 add wave -r sim:/tb_top/u_cache/refill_cnt_q
+add wave -r sim:/tb_top/u_cache/wb_cnt_q
 add wave -r sim:/tb_top/u_cache/rsp_data_q
 
 add wave -r sim:/tb_top/u_backing_memory/state_q
 add wave -r sim:/tb_top/u_backing_memory/latency_cnt_q
 add wave -r sim:/tb_top/u_backing_memory/addr_q
+add wave -r sim:/tb_top/u_backing_memory/wdata_q
+add wave -r sim:/tb_top/u_backing_memory/write_q
 add wave -r sim:/tb_top/u_backing_memory/read_data_q
 
 run -all

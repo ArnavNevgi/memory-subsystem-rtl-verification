@@ -1,10 +1,23 @@
-
-//phase 3
+//Phase 4
 
 +incdir+../../rtl/pkg
 +incdir+../../rtl/interfaces
 +incdir+../../rtl/cache
 +incdir+../../rtl/memory
+
+../../rtl/pkg/cache_pkg.sv
+../../rtl/interfaces/cache_if.sv
+
+../../rtl/memory/backing_memory.sv
+../../rtl/cache/two_way_wb_cache.sv
+
+
+//phase 3
+
+// +incdir+../../rtl/pkg
+// +incdir+../../rtl/interfaces
+// +incdir+../../rtl/cache
+// +incdir+../../rtl/memory
 
 ../../rtl/pkg/cache_pkg.sv
 ../../rtl/interfaces/cache_if.sv

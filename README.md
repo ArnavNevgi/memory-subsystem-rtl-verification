@@ -185,3 +185,41 @@ Write-back and dirty eviction will be added in Phase 4.
 
 ```text
 [PHASE 3 PASS] 2-way set-associative cache with pseudo-LRU verified.
+
+## Phase 4 Results
+
+Phase 4 upgraded the cache from write-through behavior to a write-back, write-allocate cache policy with dirty bit tracking and dirty eviction handling.
+
+### Implemented Files
+
+- `rtl/cache/two_way_wb_cache.sv`
+- Updated `tb/top/tb_top.sv`
+- Updated compile filelists
+- Updated waveform script
+
+### Cache Features Verified
+
+- Dirty bit tracking
+- Write hit updates cache without immediately updating backing memory
+- Write miss with write-allocate
+- Dirty victim detection
+- Dirty write-back before refill
+- Clean eviction path
+- Data preservation in backing memory after dirty eviction
+- Byte strobe write hit behavior
+- 2-way set-associative replacement with write-back policy
+
+### Phase 4 Cache Policy
+
+| Feature | Policy |
+|---|---|
+| Mapping | 2-way set-associative |
+| Replacement | Pseudo-LRU |
+| Write policy | Write-back |
+| Write miss policy | Write-allocate |
+| Dirty eviction | Write back full cache line before refill |
+
+### Expected Phase 4 Simulation Result
+
+```text
+[PHASE 4 PASS] Write-back cache and dirty eviction verified.
