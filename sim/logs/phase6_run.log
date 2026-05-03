@@ -1,0 +1,38 @@
+# End time: 17:24:20 on May 03,2026, Elapsed time: 0:02:39
+# Errors: 0, Warnings: 1
+# vsim -voptargs="+acc" work.tb_top 
+# Start time: 17:24:20 on May 03,2026
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# Loading sv_std.std
+# Loading work.tb_top(fast)
+# Loading work.mbist_controller(fast)
+# Loading work.mbist_pattern_gen(fast)
+# Loading work.mbist_status_regs(fast)
+# Loading work.mbist_memory_array(fast)
+# ==================================================
+# Phase 6 Test: MBIST Controller with March C-
+# ==================================================
+# [PASS] Clean MBIST done actual=1 expected=1
+# [PASS] Clean MBIST pass actual=1 expected=1
+# [PASS] Clean MBIST fail actual=0 expected=0
+# [PASS] Normal access blocked during BIST actual=1 expected=1
+# [PASS] Normal memory port not ready during BIST actual=0 expected=0
+# [PASS] Second clean MBIST done actual=1 expected=1
+# [PASS] Second clean MBIST pass actual=1 expected=1
+# [PASS] Second clean MBIST fail actual=0 expected=0
+# [PASS] Fault MBIST done actual=1 expected=1
+# [PASS] Fault MBIST pass actual=0 expected=0
+# [PASS] Fault MBIST fail actual=1 expected=1
+# [PASS] Fault address captured actual=0x0a expected=0x0a
+# [PASS] Fail expected data captured actual=0x00000000 expected=0x00000000
+# [PASS] Fail observed data captured actual=0x00000001 expected=0x00000001
+# ==================================================
+# Phase 6 Summary
+# PASS count = 14
+# FAIL count = 0
+# ==================================================
+# [PHASE 6 PASS] MBIST March C- controller verified.
+# ** Note: $finish    : ../../tb/top/tb_top.sv(282)
+#    Time: 11805 ns  Iteration: 0  Instance: /tb_top
+# 1
+# Break in Module tb_top at ../../tb/top/tb_top.sv line 282
