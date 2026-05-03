@@ -1,0 +1,53 @@
+# End time: 17:09:56 on May 03,2026, Elapsed time: 0:02:16
+# Errors: 0, Warnings: 4
+# vsim -voptargs="+acc" work.tb_top 
+# Start time: 17:09:56 on May 03,2026
+# ** Note: (vsim-3813) Design is being optimized due to module recompilation...
+# Loading sv_std.std
+# Loading work.cache_pkg(fast)
+# Loading work.tb_top(fast)
+# Loading work.cache_if(fast)
+# Loading work.two_way_wb_ecc_cache(fast)
+# Loading work.backing_memory(fast)
+# ==================================================
+# Phase 5 Test: SECDED ECC and Fault Injection
+# ==================================================
+# [INFO] Cache read addr=0x00000040 data=0xa5a51234 error=0 corrected=0 uncorrectable=0
+# [PASS] ECC clean read data actual=0xa5a51234 expected=0xa5a51234
+# [PASS] ECC clean read error actual=0 expected=0
+# [PASS] ECC clean read corrected flag actual=0 expected=0
+# [PASS] ECC clean read uncorrectable flag actual=0 expected=0
+# [FAULT_INJECT] set=4 way=0 word=0 mask=0x0000000004
+# [INFO] Cache read addr=0x00000040 data=0xa5a51234 error=0 corrected=1 uncorrectable=0
+# [PASS] Single-bit data error corrected data actual=0xa5a51234 expected=0xa5a51234
+# [PASS] Single-bit data error response error actual=0 expected=0
+# [PASS] Single-bit data error corrected flag actual=1 expected=1
+# [PASS] Single-bit data error uncorrectable flag actual=0 expected=0
+# [INFO] Cache read addr=0x00000140 data=0xbeefcafe error=0 corrected=0 uncorrectable=0
+# [PASS] Second line clean read actual=0xbeefcafe expected=0xbeefcafe
+# [FAULT_INJECT] set=4 way=1 word=0 mask=0x0000000001
+# [INFO] Cache read addr=0x00000140 data=0xbeefcafe error=0 corrected=1 uncorrectable=0
+# [PASS] Single-bit ECC bit error data actual=0xbeefcafe expected=0xbeefcafe
+# [PASS] Single-bit ECC bit error response error actual=0 expected=0
+# [PASS] Single-bit ECC bit corrected flag actual=1 expected=1
+# [PASS] Single-bit ECC bit uncorrectable flag actual=0 expected=0
+# [INFO] Cache write complete addr=0x00000040 data=0xa5a51234
+# [FAULT_INJECT] set=4 way=0 word=0 mask=0x0000000014
+# [INFO] Cache read addr=0x00000040 data=0xa5a51237 error=1 corrected=0 uncorrectable=1
+# [PASS] Double-bit error response error actual=1 expected=1
+# [PASS] Double-bit error corrected flag actual=0 expected=0
+# [PASS] Double-bit error uncorrectable flag actual=1 expected=1
+# [INFO] Cache write complete addr=0x00000140 data=0x12345678
+# [INFO] Cache read addr=0x00000140 data=0x12345678 error=0 corrected=0 uncorrectable=0
+# [PASS] Write hit regenerates ECC and returns updated data actual=0x12345678 expected=0x12345678
+# [PASS] Write hit ECC read error actual=0 expected=0
+# ==================================================
+# Phase 5 Summary
+# PASS count = 18
+# FAIL count = 0
+# ==================================================
+# [PHASE 5 PASS] SECDED ECC and fault injection verified.
+# ** Note: $finish    : ../../tb/top/tb_top.sv(294)
+#    Time: 885 ns  Iteration: 0  Instance: /tb_top
+# 1
+# Break in Module tb_top at ../../tb/top/tb_top.sv line 294
