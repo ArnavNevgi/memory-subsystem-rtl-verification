@@ -109,3 +109,34 @@ The initial version does not implement:
 - Gate-level DFT insertion
 
 These can be listed as future improvements.
+
+## Final Implemented Scope
+
+The final implemented design includes:
+
+- Ready/valid CPU-side request-response interface
+- Backing memory model
+- Direct-mapped cache baseline
+- 2-way set-associative cache
+- Pseudo-LRU replacement
+- Write-back/write-allocate policy
+- Dirty bit tracking
+- Dirty eviction and full-line write-back
+- SECDED ECC protection for cache data
+- Fault injection for ECC verification
+- MBIST controller with March C-
+- Standalone memory array model for MBIST verification
+- Assertions, scoreboard, coverage, and randomized tests
+
+## Final Verification Result
+
+All feature phases completed successfully.
+
+```text
+Phase 1 PASS
+Phase 2 PASS
+Phase 3 PASS
+Phase 4 PASS
+Phase 5 PASS
+Phase 6 PASS
+Phase 7 PASS
