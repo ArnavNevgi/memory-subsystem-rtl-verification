@@ -1,0 +1,38 @@
+# vsim -voptargs="+acc" work.tb_top 
+# Start time: 14:37:13 on May 03,2026
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Note: (vopt-143) Recognized 1 FSM in module "backing_memory(fast)".
+# Loading sv_std.std
+# Loading work.cache_pkg(fast)
+# Loading work.tb_top(fast)
+# Loading work.cache_if(fast)
+# Loading work.backing_memory(fast)
+# ==================================================
+# Phase 1 Test: Basic Backing Memory Interface
+# ==================================================
+# [INFO] Write complete: addr=0x00000000 data=0xdeadbeef
+# [INFO] Read complete : addr=0x00000000 data=0xdeadbeef
+# [PASS] Read-after-write addr 0x00000000 actual=0xdeadbeef expected=0xdeadbeef
+# [INFO] Write complete: addr=0x00000004 data=0x12345678
+# [INFO] Read complete : addr=0x00000004 data=0x12345678
+# [PASS] Read-after-write addr 0x00000004 actual=0x12345678 expected=0x12345678
+# [INFO] Write complete: addr=0x00000008 data=0xaaaaaaaa
+# [INFO] Write complete: addr=0x00000008 data=0x00000055
+# [INFO] Read complete : addr=0x00000008 data=0xaaaaaa55
+# [PASS] Byte strobe lower byte update actual=0xaaaaaa55 expected=0xaaaaaa55
+# [INFO] Write complete: addr=0x0000000c data=0xcafebabe
+# [INFO] Write complete: addr=0x00000010 data=0x0badf00d
+# [INFO] Read complete : addr=0x0000000c data=0xcafebabe
+# [PASS] Back-to-back write/read addr 0x0000000C actual=0xcafebabe expected=0xcafebabe
+# [INFO] Read complete : addr=0x00000010 data=0x0badf00d
+# [PASS] Back-to-back write/read addr 0x00000010 actual=0x0badf00d expected=0x0badf00d
+# ==================================================
+# Phase 1 Summary
+# PASS count = 5
+# FAIL count = 0
+# ==================================================
+# [PHASE 1 PASS] Basic memory interface and backing memory model verified.
+# ** Note: $finish    : ../../tb/top/tb_top.sv(252)
+#    Time: 855 ns  Iteration: 0  Instance: /tb_top
+# 1
+# Break in Module tb_top at ../../tb/top/tb_top.sv line 252
