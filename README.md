@@ -75,3 +75,71 @@ MBIST Controller
         +--> Fail Address Register
         +--> Fail Data Register
         +--> BIST Status Registers
+
+        ## Phase 1 Results
+
+Phase 1 implemented the basic request/response memory interface and a backing memory model with programmable response latency.
+
+### Implemented Files
+
+- `rtl/pkg/cache_pkg.sv`
+- `rtl/interfaces/cache_if.sv`
+- `rtl/memory/backing_memory.sv`
+- `tb/top/tb_top.sv`
+
+### Verified Features
+
+- Ready/valid request handshake
+- Ready/valid response handshake
+- Full-word write
+- Full-word read
+- Read-after-write correctness
+- Byte strobe write behavior
+- Back-to-back memory accesses
+- Programmable memory response latency
+
+### Expected Phase 1 Simulation Result
+
+```text
+[PHASE 1 PASS] Basic memory interface and backing memory model verified.
+
+## Phase 2 Results
+
+Phase 2 implemented a direct-mapped cache baseline between the CPU-side request interface and the backing memory model.
+
+### Implemented Files
+
+- `rtl/cache/direct_mapped_cache.sv`
+- Updated `tb/top/tb_top.sv`
+- Updated compile filelists
+
+### Cache Features Verified
+
+- Direct-mapped tag lookup
+- Valid bit behavior
+- Read miss refill
+- Read hit
+- Write miss with write-allocate
+- Write hit
+- Byte strobe update
+- Same-index conflict replacement
+- Backing memory write-through behavior
+
+### Phase 2 Cache Policy
+
+For this baseline phase, the cache uses:
+
+| Feature | Policy |
+|---|---|
+| Mapping | Direct-mapped |
+| Line size | 16 bytes |
+| Words per line | 4 |
+| Write policy | Write-through |
+| Write miss policy | Write-allocate |
+
+Write-back and dirty eviction will be added in Phase 4.
+
+### Expected Phase 2 Simulation Result
+
+```text
+[PHASE 2 PASS] Direct-mapped cache baseline verified.

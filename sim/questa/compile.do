@@ -11,3 +11,4 @@ vlog -sv -f ../../filelists/rtl.f
 vlog -sv -f ../../filelists/tb.f
 
 transcript file ""
+quit
