@@ -1,15 +1,32 @@
-//Phase 4
-
+//phase 5
 +incdir+../../rtl/pkg
 +incdir+../../rtl/interfaces
 +incdir+../../rtl/cache
 +incdir+../../rtl/memory
++incdir+../../rtl/ecc
 
 ../../rtl/pkg/cache_pkg.sv
 ../../rtl/interfaces/cache_if.sv
 
+../../rtl/ecc/ecc_encoder.sv
+../../rtl/ecc/ecc_decoder.sv
+
 ../../rtl/memory/backing_memory.sv
-../../rtl/cache/two_way_wb_cache.sv
+../../rtl/cache/two_way_wb_ecc_cache.sv
+
+
+//Phase 4
+
+// +incdir+../../rtl/pkg
+// +incdir+../../rtl/interfaces
+// +incdir+../../rtl/cache
+// +incdir+../../rtl/memory
+
+// ../../rtl/pkg/cache_pkg.sv
+// ../../rtl/interfaces/cache_if.sv
+
+// ../../rtl/memory/backing_memory.sv
+// ../../rtl/cache/two_way_wb_cache.sv
 
 
 //phase 3
@@ -19,11 +36,11 @@
 // +incdir+../../rtl/cache
 // +incdir+../../rtl/memory
 
-../../rtl/pkg/cache_pkg.sv
-../../rtl/interfaces/cache_if.sv
+// ../../rtl/pkg/cache_pkg.sv
+// ../../rtl/interfaces/cache_if.sv
 
-../../rtl/memory/backing_memory.sv
-../../rtl/cache/two_way_cache.sv
+// ../../rtl/memory/backing_memory.sv
+// ../../rtl/cache/two_way_cache.sv
 
  //PHASE 2
 // +incdir+../../rtl/pkg

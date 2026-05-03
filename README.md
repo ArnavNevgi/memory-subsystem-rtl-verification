@@ -223,3 +223,57 @@ Phase 4 upgraded the cache from write-through behavior to a write-back, write-al
 
 ```text
 [PHASE 4 PASS] Write-back cache and dirty eviction verified.
+
+## Phase 5 Results
+
+Phase 5 added SECDED ECC protection to the 2-way write-back cache data array and verified fault-injection behavior.
+
+### Implemented Files
+
+- `rtl/ecc/ecc_encoder.sv`
+- `rtl/ecc/ecc_decoder.sv`
+- `rtl/cache/two_way_wb_ecc_cache.sv`
+- Updated `tb/top/tb_top.sv`
+- Updated `filelists/rtl.f`
+- Updated `filelists/tb.f`
+- Updated `sim/questa/wave.do`
+
+### ECC Features Verified
+
+- ECC generation during cache line refill
+- ECC regeneration on write hit
+- Clean ECC-protected cache read
+- Single-bit data/codeword error correction
+- Single-bit ECC/check-bit error correction
+- Double-bit error detection
+- Fault injection into cached ECC-protected data
+- Corrected data returned for single-bit errors
+- Response error asserted for uncorrectable double-bit errors
+- Write hit after ECC access regenerates a clean ECC codeword
+
+### Phase 5 Verification Tests
+
+| Test | Expected Behavior | Result |
+|---|---|---|
+| Clean ECC read | Data returned correctly, no error | PASS |
+| Single-bit data/codeword fault | Data corrected, `rsp_error = 0` | PASS |
+| Single-bit ECC/check-bit fault | Data returned correctly, corrected flag set | PASS |
+| Double-bit fault | `rsp_error = 1`, uncorrectable flag set | PASS |
+| Write hit after ECC access | Updated data returned and ECC regenerated | PASS |
+
+### Important Debug Note
+
+During verification, the double-bit error test was corrected to first rewrite clean data before injecting the two-bit fault. This is required because a previous single-bit injected fault remains physically present in the stored cache codeword unless the line is rewritten or scrubbed. SECDED corrects the returned data, but the stored line is not automatically repaired in this Phase 5 implementation.
+
+This documents an important real memory-system concept:
+
+- ECC correction can be performed on read.
+- Persistent correction requires writeback/scrubbing logic.
+- Without scrubbing, the physical stored codeword may still contain the original fault.
+
+### Phase 5 Simulation Result
+
+```text
+Phase 5 Summary
+FAIL count = 0
+[PHASE 5 PASS] SECDED ECC and fault injection verified.
