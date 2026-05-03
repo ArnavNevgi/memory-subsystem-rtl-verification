@@ -1,0 +1,46 @@
+# Simulation outputs
+work/
+transcript
+vsim.wlf
+*.wlf
+*.vcd
+*.fst
+*.log
+*.jou
+*.pb
+*.rpt
+*.ucdb
+
+# Questa/ModelSim
+modelsim.ini
+*.do.bak
+
+# Verilator
+obj_dir/
+*.vlt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+*.swp
+
+# Temporary files
+tmp/
+temp/
+*.bak
+*.orig
+
+# Generated coverage
+coverage_html/
+htmlcov/
+
+# Build outputs
+build/
+out/
